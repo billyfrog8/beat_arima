@@ -4,6 +4,16 @@ let userForecast = Array(10).fill(null);
 let userScore = 0, arimaScore = 0;
 let isDrawing = false;
 
+function showMessage(message, type = 'info') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.textContent = message;
+    document.body.appendChild(messageDiv);
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 5000);
+}
+
 function getGameData() {
     fetch('/get_data')
         .then(response => response.json())

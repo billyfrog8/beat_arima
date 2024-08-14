@@ -7,7 +7,6 @@ import os
 sp500 = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')[0]
 tickers = sp500['Symbol'].tolist()
 
-# Set date range (e.g., last 5 years)
 end_date = datetime.now()
 start_date = end_date - timedelta(days=1*365)
 
