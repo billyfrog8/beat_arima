@@ -1,5 +1,4 @@
 from flask import Flask, render_template, jsonify
-import numpy as np
 from pmdarima import auto_arima
 from sklearn.metrics import mean_squared_error
 import pandas as pd
