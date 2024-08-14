@@ -46,7 +46,8 @@ ordered-set==4.1.0
 packaging==24.1
 pandas==2.2.2
 patsy==0.5.6
-pmdarima
+numpy==1.21.0
+pmdarima==1.8.2
 pillow==10.4.0
 pycoingecko==3.1.0
 Pygments==2.18.0
@@ -58,7 +59,6 @@ pytz==2024.1
 requests==2.32.3
 requests-oauthlib==2.0.0
 rich==13.7.1
-numpy>=1.21.0
 scikit-learn>=1.0.0
 scipy==1.14.0
 setuptools==72.2.0
