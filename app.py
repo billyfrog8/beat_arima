@@ -4,6 +4,7 @@ from sklearn.metrics import mean_squared_error
 import pandas as pd
 import os
 import random
+import time
 
 app = Flask(__name__)
 
@@ -46,7 +47,7 @@ game = ForecastGame()
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html',time = time.time)
 
 @app.route('/get_data')
 def get_data():
