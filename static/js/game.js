@@ -26,6 +26,7 @@ function getGameData() {
 function initChart() {
     const ctx = document.getElementById('forecastChart').getContext('2d');
     
+    Chart.defaults.color = '#ffffff';
     Chart.defaults.font.family = "'Poppins', sans-serif";
     Chart.defaults.font.size = 14;
 
@@ -58,16 +59,21 @@ function initChart() {
                 x: {
                     title: {
                         display: true,
-                        text: 'Time'
+                        text: 'Time',
+                        color: '#ffffff'
                     },
                     grid: {
                         color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: '#ffffff'
                     }
                 },
                 y: {
                     title: {
                         display: true,
-                        text: 'Value'
+                        text: 'Value',
+                        color: '#ffffff'
                     },
                     grid: {
                         color: 'rgba(255, 255, 255, 0.1)'
@@ -75,6 +81,7 @@ function initChart() {
                     suggestedMin: range.suggestedMin,
                     suggestedMax: range.suggestedMax,
                     ticks: {
+                        color: '#ffffff',
                         callback: function(value) {
                             return value.toFixed(2);
                         }
@@ -84,7 +91,7 @@ function initChart() {
             plugins: {
                 legend: {
                     labels: {
-                        color: 'white',
+                        color: '#ffffff',
                         usePointStyle: true,
                         padding: 20
                     }
@@ -102,7 +109,6 @@ function initChart() {
             }
         }
     });
-
 
     const canvas = chart.canvas;
     canvas.addEventListener('mousedown', startDrawing);
@@ -125,10 +131,9 @@ function calculateChartRange(data) {
 
 
 function initCandlestickChart() {
-    const isDarkMode = document.body.classList.contains('dark-mode');
-    const textColor = isDarkMode ? 'white' : 'black';
-    const plotBgColor = isDarkMode ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0)';
-    const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    const textColor = 'white';
+    const plotBgColor = 'rgba(0, 0, 0, 0)';
+    const gridColor = 'rgba(255, 255, 255, 0.1)';
 
     const trace = {
         x: Array.from({length: 90}, (_, i) => i),
@@ -138,7 +143,9 @@ function initCandlestickChart() {
         open: ohlcData.slice(0, 90).map(d => d[1]),
         type: 'candlestick',
         xaxis: 'x',
-        yaxis: 'y'
+        yaxis: 'y',
+        increasing: {line: {color: '#26a69a'}},
+        decreasing: {line: {color: '#ef5350'}}
     };
 
     const layout = {
@@ -153,14 +160,16 @@ function initCandlestickChart() {
             showgrid: false,
             gridcolor: gridColor,
             tickcolor: textColor,
-            linecolor:'#cccccc' ,
-            linewidth:1
+            linecolor: '#cccccc',
+            linewidth: 1,
+            color: textColor
         },
         yaxis: {
             title: 'Price',
             showgrid: false,
             gridcolor: gridColor,
-            tickcolor: textColor
+            tickcolor: textColor,
+            color: textColor
         },
         paper_bgcolor: plotBgColor,
         plot_bgcolor: plotBgColor,
@@ -287,18 +296,21 @@ function resetChartData() {
 }
 
 function playAgain() {
-    resetChartData(); // Clear chart data before restarting
-    
     fetch('/play_again')
         .then(response => response.json())
         .then(data => {
             trainData = data.train_data;
-            testData = data.test_data;
             arimaForecast = data.arima_forecast;
             ohlcData = data.ohlc_data;
             userForecast = Array(10).fill(null);
-
+            
             // Reset forecast chart
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const textColor = isDarkMode ? 'white' : 'black';
+            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const axisLineColor = '#cccccc'; // Light grey for both modes
+
+            // Recalculate y-axis scale
             const range = calculateChartRange(trainData);
 
             chart.data.datasets = [{
@@ -316,6 +328,14 @@ function playAgain() {
                 pointRadius: 0,
                 fill: false
             }];
+            chart.options.scales.x.title.color = textColor;
+            chart.options.scales.x.grid.color = gridColor;
+            chart.options.scales.x.ticks.color = textColor;
+            chart.options.scales.x.borderColor = axisLineColor;
+            chart.options.scales.y.title.color = textColor;
+            chart.options.scales.y.grid.color = gridColor;
+            chart.options.scales.y.ticks.color = textColor;
+            chart.options.scales.y.borderColor = axisLineColor;
             chart.options.scales.y.suggestedMin = range.suggestedMin;
             chart.options.scales.y.suggestedMax = range.suggestedMax;
             chart.update();
@@ -335,15 +355,26 @@ function playAgain() {
                 showlegend: false,
                 xaxis: {
                     rangeslider: {visible: false},
-                    title: 'Time'
+                    title: 'Time',
+                    tickmode: 'array',
+                    tickvals: Array.from({length: 10}, (_, i) => i * 10),
+                    ticktext: Array.from({length: 10}, (_, i) => i * 10),
+                    showgrid: false,
+                    gridcolor: gridColor,
+                    tickcolor: textColor,
+                    linecolor: axisLineColor,
+                    linewidth: 1
                 },
                 yaxis: {
-                    title: 'Price'
+                    title: 'Price',
+                    showgrid: false,
+                    gridcolor: gridColor,
+                    tickcolor: textColor
                 },
-                paper_bgcolor: 'rgba(0, 0, 0, 0)',
-                plot_bgcolor: 'rgba(0, 0, 0, 0)',
+                paper_bgcolor: isDarkMode ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0)',
+                plot_bgcolor: isDarkMode ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0)',
                 font: {
-                    color: 'white'
+                    color: textColor
                 },
                 margin: {
                     l: 50,
@@ -353,14 +384,13 @@ function playAgain() {
                     pad: 4
                 },
                 height: 300
-            });
+            }, {displayModeBar: false});
 
             document.getElementById('result').textContent = '';
             document.getElementById('stock-info').style.display = 'none';
         })
         .catch(error => console.error('Error:', error));
 }
-
 
 
 function updateScore() {
@@ -373,24 +403,12 @@ function updateStockInfo(stockInfo) {
     stockInfoElement.style.display = 'block';
 }
 
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const isDarkMode = document.body.classList.contains('dark-mode');
-    localStorage.setItem('darkMode', isDarkMode);
-    
-    // Reinitialize charts to apply color changes
-    initChart();
-    initCandlestickChart();
-}
+
 
 document.getElementById('done').addEventListener('click', done);
 document.getElementById('erase').addEventListener('click', erase);
 document.getElementById('play-again').addEventListener('click', playAgain);
-document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
 
-// Check for saved dark mode preference
-if (localStorage.getItem('darkMode') === 'true') {
-    document.body.classList.add('dark-mode');
-}
+
 
 getGameData();
