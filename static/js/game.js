@@ -281,22 +281,24 @@ function done() {
         });
 }
 
+function resetChartData() {
+    chart.data.datasets = [];  // Clear all datasets
+    chart.update();  // Update the chart to clear it visually
+}
+
 function playAgain() {
+    resetChartData(); // Clear chart data before restarting
+    
     fetch('/play_again')
         .then(response => response.json())
         .then(data => {
             trainData = data.train_data;
+            testData = data.test_data;
             arimaForecast = data.arima_forecast;
             ohlcData = data.ohlc_data;
             userForecast = Array(10).fill(null);
-            
-            // Reset forecast chart
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            const textColor = isDarkMode ? 'white' : 'black';
-            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            const axisLineColor = '#cccccc'; // Light grey for both modes
 
-            // Recalculate y-axis scale
+            // Reset forecast chart
             const range = calculateChartRange(trainData);
 
             chart.data.datasets = [{
@@ -314,14 +316,6 @@ function playAgain() {
                 pointRadius: 0,
                 fill: false
             }];
-            chart.options.scales.x.title.color = textColor;
-            chart.options.scales.x.grid.color = gridColor;
-            chart.options.scales.x.ticks.color = textColor;
-            chart.options.scales.x.borderColor = axisLineColor;
-            chart.options.scales.y.title.color = textColor;
-            chart.options.scales.y.grid.color = gridColor;
-            chart.options.scales.y.ticks.color = textColor;
-            chart.options.scales.y.borderColor = axisLineColor;
             chart.options.scales.y.suggestedMin = range.suggestedMin;
             chart.options.scales.y.suggestedMax = range.suggestedMax;
             chart.update();
@@ -341,26 +335,15 @@ function playAgain() {
                 showlegend: false,
                 xaxis: {
                     rangeslider: {visible: false},
-                    title: 'Time',
-                    tickmode: 'array',
-                    tickvals: Array.from({length: 10}, (_, i) => i * 10),
-                    ticktext: Array.from({length: 10}, (_, i) => i * 10),
-                    showgrid: false,
-                    gridcolor: gridColor,
-                    tickcolor: textColor,
-                    linecolor: axisLineColor,
-                    linewidth: 1
+                    title: 'Time'
                 },
                 yaxis: {
-                    title: 'Price',
-                    showgrid: false,
-                    gridcolor: gridColor,
-                    tickcolor: textColor
+                    title: 'Price'
                 },
-                paper_bgcolor: isDarkMode ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0)',
-                plot_bgcolor: isDarkMode ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0)',
+                paper_bgcolor: 'rgba(0, 0, 0, 0)',
+                plot_bgcolor: 'rgba(0, 0, 0, 0)',
                 font: {
-                    color: textColor
+                    color: 'white'
                 },
                 margin: {
                     l: 50,
@@ -370,13 +353,14 @@ function playAgain() {
                     pad: 4
                 },
                 height: 300
-            }, {displayModeBar: false});
+            });
 
             document.getElementById('result').textContent = '';
             document.getElementById('stock-info').style.display = 'none';
         })
         .catch(error => console.error('Error:', error));
 }
+
 
 
 function updateScore() {
