@@ -66,8 +66,8 @@ def get_data():
 
 @app.route('/play_again')
 def play_again():
-    game.generate_data()
-    game.fit_arima()
+    global game
+    game = ForecastGame()
     return jsonify({
         'train_data': game.train_data,
         'arima_forecast': game.arima_forecast,
@@ -82,8 +82,26 @@ def play_again():
 @app.route('/submit_forecast/<forecast>')
 def submit_forecast(forecast):
     user_forecast = [float(x) for x in forecast.split(',')]
+    
+    # Debugging logs
+    print(f"Test Data: {game.test_data}")
+    print(f"User Forecast: {user_forecast}")
+    print(f"ARIMA Forecast: {game.arima_forecast}")
+    
+    # Check if data lengths match
+    if len(game.test_data) != len(game.arima_forecast) or len(game.test_data) != len(user_forecast):
+        print("Mismatch in data lengths.")
+        return jsonify({
+            'result': 'Error: Forecast and actual data length mismatch.',
+            'user_mse': None,
+            'arima_mse': None
+        })
+
     user_mse = mean_squared_error(game.test_data, user_forecast)
     arima_mse = mean_squared_error(game.test_data, game.arima_forecast)
+
+    print(f"User MSE: {user_mse}")
+    print(f"ARIMA MSE: {arima_mse}")
 
     if user_mse < arima_mse:
         result = "User wins!"
@@ -105,6 +123,7 @@ def submit_forecast(forecast):
             'end_date': game.end_date
         }
     })
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

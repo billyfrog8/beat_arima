@@ -29,13 +29,7 @@ function initChart() {
     Chart.defaults.font.family = "'Poppins', sans-serif";
     Chart.defaults.font.size = 14;
 
-    const isDarkMode = document.body.classList.contains('dark-mode');
-    const textColor = isDarkMode ? 'white' : 'black';
-    const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-
-    const minValue = Math.min(...trainData);
-    const maxValue = Math.max(...trainData);
-    const padding = (maxValue - minValue) * 0.1; // Add 10% padding
+    const range = calculateChartRange(trainData);
 
     chart = new Chart(ctx, {
         type: 'line',
@@ -64,29 +58,23 @@ function initChart() {
                 x: {
                     title: {
                         display: true,
-                        text: 'Time',
-                        color: textColor
+                        text: 'Time'
                     },
                     grid: {
-                        color: gridColor
-                    },
-                    ticks: {
-                        color: textColor
+                        color: 'rgba(255, 255, 255, 0.1)'
                     }
                 },
                 y: {
                     title: {
                         display: true,
-                        text: 'Value',
-                        color: textColor
+                        text: 'Value'
                     },
                     grid: {
-                        color: gridColor
+                        color: 'rgba(255, 255, 255, 0.1)'
                     },
-                    min: minValue - padding,
-                    max: maxValue + padding,
+                    suggestedMin: range.suggestedMin,
+                    suggestedMax: range.suggestedMax,
                     ticks: {
-                        color: textColor,
                         callback: function(value) {
                             return value.toFixed(2);
                         }
@@ -96,13 +84,13 @@ function initChart() {
             plugins: {
                 legend: {
                     labels: {
-                        color: textColor,
+                        color: 'white',
                         usePointStyle: true,
                         padding: 20
                     }
                 },
                 tooltip: {
-                    enabled: false
+                    enabled: true
                 }
             },
             interaction: {
@@ -115,12 +103,26 @@ function initChart() {
         }
     });
 
+
     const canvas = chart.canvas;
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseout', stopDrawing);
 }
+
+function calculateChartRange(data) {
+    const minValue = Math.min(...data.filter(v => v !== null));
+    const maxValue = Math.max(...data.filter(v => v !== null));
+    const range = maxValue - minValue;
+    const padding = range * 0.1;
+    return {
+        suggestedMin: minValue - padding,
+        suggestedMax: maxValue + padding
+    };
+}
+
+
 
 function initCandlestickChart() {
     const isDarkMode = document.body.classList.contains('dark-mode');
@@ -220,22 +222,46 @@ function done() {
     fetch(`/submit_forecast/${userForecast.join(',')}`)
         .then(response => response.json())
         .then(data => {
-            chart.data.datasets.push({
-                label: 'Actual Data',
-                data: trainData.concat(data.test_data),
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false
-            }, {
-                label: 'ARIMA Forecast',
-                data: trainData.concat(arimaForecast),
-                borderColor: 'rgba(153, 102, 255, 1)',
-                borderWidth: 2,
-                borderDash: [5, 5],
-                pointRadius: 0,
-                fill: false
-            });
+            // Update existing datasets
+            chart.data.datasets[0].data = trainData; // Historical data
+            chart.data.datasets[1].data = Array(90).fill(null).concat(userForecast); // User forecast
+            
+            // Add or update Actual Data
+            let actualDataset = chart.data.datasets.find(ds => ds.label === 'Actual Data');
+            if (!actualDataset) {
+                actualDataset = {
+                    label: 'Actual Data',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false
+                };
+                chart.data.datasets.push(actualDataset);
+            }
+            actualDataset.data = trainData.concat(data.test_data);
+
+            // Add or update ARIMA Forecast
+            let arimaDataset = chart.data.datasets.find(ds => ds.label === 'ARIMA Forecast');
+            if (!arimaDataset) {
+                arimaDataset = {
+                    label: 'ARIMA Forecast',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    fill: false
+                };
+                chart.data.datasets.push(arimaDataset);
+            }
+            arimaDataset.data = trainData.concat(arimaForecast);
+
+            // Recalculate y-axis scale
+            const allData = chart.data.datasets.flatMap(ds => ds.data.filter(v => v !== null));
+            const range = calculateChartRange(allData);
+
+            chart.options.scales.y.suggestedMin = range.suggestedMin;
+            chart.options.scales.y.suggestedMax = range.suggestedMax;
+
             chart.update();
 
             document.getElementById('result').textContent = `${data.result} (User MSE: ${data.user_mse.toFixed(2)}, ARIMA MSE: ${data.arima_mse.toFixed(2)})`;
@@ -270,6 +296,9 @@ function playAgain() {
             const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
             const axisLineColor = '#cccccc'; // Light grey for both modes
 
+            // Recalculate y-axis scale
+            const range = calculateChartRange(trainData);
+
             chart.data.datasets = [{
                 label: 'Historical Data',
                 data: trainData.concat(Array(10).fill(null)),
@@ -293,8 +322,8 @@ function playAgain() {
             chart.options.scales.y.grid.color = gridColor;
             chart.options.scales.y.ticks.color = textColor;
             chart.options.scales.y.borderColor = axisLineColor;
-            chart.options.scales.y.min = Math.min(...trainData) - 10;
-            chart.options.scales.y.max = Math.max(...trainData) + 10;
+            chart.options.scales.y.suggestedMin = range.suggestedMin;
+            chart.options.scales.y.suggestedMax = range.suggestedMax;
             chart.update();
             
             // Reset candlestick chart
