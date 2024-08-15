@@ -30,8 +30,6 @@ class ForecastGame:
             window = df.iloc[-100:]
         
         self.data = window['Close'].values
-        min_val, max_val = self.data.min(), self.data.max()
-        self.data = (self.data - min_val) / (max_val - min_val) * 100
         
         self.train_data = self.data[:90].tolist()
         self.test_data = self.data[90:].tolist()
