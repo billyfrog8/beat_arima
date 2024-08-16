@@ -31,21 +31,20 @@ def add_header(response):
 class ForecastGame:
     def __init__(self):
         self.stock_data_dir = 'stock_data'
-        self.used_stocks = set()
         self.all_stocks = set(os.listdir(self.stock_data_dir))
+        self.unused_stocks = set(self.all_stocks)
         self.generate_data()
         self.fit_arima()
         self.user_score = 0
         self.arima_score = 0
 
     def generate_data(self):
-        available_stocks = list(self.all_stocks - self.used_stocks)
-        if not available_stocks:
-            self.used_stocks.clear()
-            available_stocks = list(self.all_stocks)
+        if not self.unused_stocks:
+            # If all stocks have been used, reset the unused_stocks
+            self.unused_stocks = set(self.all_stocks)
         
-        self.selected_file = random.choice(available_stocks)
-        self.used_stocks.add(self.selected_file)
+        self.selected_file = random.choice(list(self.unused_stocks))
+        self.unused_stocks.remove(self.selected_file)
         
         df = pd.read_csv(os.path.join(self.stock_data_dir, self.selected_file))
         df['Datetime'] = pd.to_datetime(df['Datetime'])

@@ -4,9 +4,15 @@ let userForecast = Array(10).fill(null);
 let userScore = 0, arimaScore = 0;
 let isDrawing = false;
 
-
 function getGameData() {
-    fetch('/get_data')
+    fetch('/get_data?' + new Date().getTime(), {
+        method: 'GET',
+        headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+        },
+    })
         .then(response => response.json())
         .then(data => {
             trainData = data.train_data;
@@ -287,7 +293,14 @@ function resetChartData() {
 }
 
 function playAgain() {
-    fetch('/play_again')
+    fetch('/play_again?' + new Date().getTime(), {
+        method: 'GET',
+        headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+        },
+    })
         .then(response => response.json())
         .then(data => {
             trainData = data.train_data;
@@ -413,5 +426,11 @@ document.getElementById('dark-mode-toggle').addEventListener('click', toggleDark
 if (localStorage.getItem('darkMode') === 'true') {
     document.body.classList.add('dark-mode');
 }
+
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
 
 getGameData();
