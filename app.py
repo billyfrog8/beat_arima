@@ -1,4 +1,5 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, make_response
+from functools import wraps, update_wrapper
 from pmdarima import auto_arima
 from sklearn.metrics import mean_squared_error
 import pandas as pd
@@ -8,7 +9,19 @@ import time
 
 app = Flask(__name__)
 
+def nocache(view):
+    @wraps(view)
+    def no_cache(*args, **kwargs):
+        response = make_response(view(*args, **kwargs))
+        response.headers['Last-Modified'] = time.ctime(time.time())
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+        return response
+    return update_wrapper(no_cache, view)
+
 @app.after_request
+@nocache
 def add_header(response):
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     response.headers['Pragma'] = 'no-cache'
@@ -60,10 +73,12 @@ class ForecastGame:
 game = ForecastGame()
 
 @app.route('/')
+@nocache
 def index():
     return render_template('index.html',time = time.time)
 
 @app.route('/get_data')
+@nocache
 def get_data():
     return jsonify({
         'train_data': game.train_data,
@@ -79,22 +94,8 @@ def get_data():
         }
     })
 
-@app.route('/play_again')
-def play_again():
-    global game
-    game = ForecastGame()
-    return jsonify({
-        'train_data': game.train_data,
-        'arima_forecast': game.arima_forecast,
-        'ohlc_data': game.ohlc_data,
-        'stock_info': {
-            'ticker': game.selected_file.split('.')[0],
-            'start_date': game.start_date,
-            'end_date': game.end_date
-        }
-    })
-
 @app.route('/submit_forecast/<forecast>')
+@nocache
 def submit_forecast(forecast):
     user_forecast = [float(x) for x in forecast.split(',')]
     
@@ -139,6 +140,25 @@ def submit_forecast(forecast):
         }
     })
 
+@app.route('/play_again')
+@nocache
+def play_again():
+    global game
+    old_scores = (game.user_score, game.arima_score)
+    game = ForecastGame()
+    game.user_score, game.arima_score = old_scores
+    return jsonify({
+        'train_data': game.train_data,
+        'arima_forecast': game.arima_forecast,
+        'ohlc_data': game.ohlc_data,
+        'stock_info': {
+            'ticker': game.selected_file.split('.')[0],
+            'start_date': game.start_date,
+            'end_date': game.end_date
+        },
+        'user_score': game.user_score,
+        'arima_score': game.arima_score
+    })
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

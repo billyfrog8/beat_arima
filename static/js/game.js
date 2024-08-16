@@ -26,7 +26,6 @@ function getGameData() {
 function initChart() {
     const ctx = document.getElementById('forecastChart').getContext('2d');
     
-    Chart.defaults.color = '#ffffff';
     Chart.defaults.font.family = "'Poppins', sans-serif";
     Chart.defaults.font.size = 14;
 
@@ -59,21 +58,16 @@ function initChart() {
                 x: {
                     title: {
                         display: true,
-                        text: 'Time',
-                        color: '#ffffff'
+                        text: 'Time'
                     },
                     grid: {
                         color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    ticks: {
-                        color: '#ffffff'
                     }
                 },
                 y: {
                     title: {
                         display: true,
-                        text: 'Value',
-                        color: '#ffffff'
+                        text: 'Value'
                     },
                     grid: {
                         color: 'rgba(255, 255, 255, 0.1)'
@@ -81,7 +75,6 @@ function initChart() {
                     suggestedMin: range.suggestedMin,
                     suggestedMax: range.suggestedMax,
                     ticks: {
-                        color: '#ffffff',
                         callback: function(value) {
                             return value.toFixed(2);
                         }
@@ -91,7 +84,7 @@ function initChart() {
             plugins: {
                 legend: {
                     labels: {
-                        color: '#ffffff',
+                        color: 'white',
                         usePointStyle: true,
                         padding: 20
                     }
@@ -109,6 +102,7 @@ function initChart() {
             }
         }
     });
+
 
     const canvas = chart.canvas;
     canvas.addEventListener('mousedown', startDrawing);
@@ -131,9 +125,10 @@ function calculateChartRange(data) {
 
 
 function initCandlestickChart() {
-    const textColor = 'white';
-    const plotBgColor = 'rgba(0, 0, 0, 0)';
-    const gridColor = 'rgba(255, 255, 255, 0.1)';
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    const textColor = isDarkMode ? 'white' : 'black';
+    const plotBgColor = isDarkMode ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0)';
+    const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
     const trace = {
         x: Array.from({length: 90}, (_, i) => i),
@@ -143,9 +138,7 @@ function initCandlestickChart() {
         open: ohlcData.slice(0, 90).map(d => d[1]),
         type: 'candlestick',
         xaxis: 'x',
-        yaxis: 'y',
-        increasing: {line: {color: '#26a69a'}},
-        decreasing: {line: {color: '#ef5350'}}
+        yaxis: 'y'
     };
 
     const layout = {
@@ -160,16 +153,14 @@ function initCandlestickChart() {
             showgrid: false,
             gridcolor: gridColor,
             tickcolor: textColor,
-            linecolor: '#cccccc',
-            linewidth: 1,
-            color: textColor
+            linecolor:'#cccccc' ,
+            linewidth:1
         },
         yaxis: {
             title: 'Price',
             showgrid: false,
             gridcolor: gridColor,
-            tickcolor: textColor,
-            color: textColor
+            tickcolor: textColor
         },
         paper_bgcolor: plotBgColor,
         plot_bgcolor: plotBgColor,
@@ -403,12 +394,24 @@ function updateStockInfo(stockInfo) {
     stockInfoElement.style.display = 'block';
 }
 
-
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode);
+    
+    // Reinitialize charts to apply color changes
+    initChart();
+    initCandlestickChart();
+}
 
 document.getElementById('done').addEventListener('click', done);
 document.getElementById('erase').addEventListener('click', erase);
 document.getElementById('play-again').addEventListener('click', playAgain);
+document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
 
-
+// Check for saved dark mode preference
+if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+}
 
 getGameData();
