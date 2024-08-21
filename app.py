@@ -29,10 +29,20 @@ def add_header(response):
     return response
 
 class ForecastGame:
+    all_stocks = None
+    unused_stocks = None
+    stock_data_dir = 'stock_data'
+
+    @classmethod
+    def initialize_stocks(cls):
+        if cls.all_stocks is None:
+            cls.all_stocks = set(os.listdir(cls.stock_data_dir))
+        if cls.unused_stocks is None or len(cls.unused_stocks) == 0:
+            cls.unused_stocks = set(cls.all_stocks)
+        print(f"Initialized stocks. Total: {len(cls.all_stocks)}, Unused: {len(cls.unused_stocks)}")
+
     def __init__(self):
-        self.stock_data_dir = 'stock_data'
-        self.all_stocks = set(os.listdir(self.stock_data_dir))
-        self.unused_stocks = set(self.all_stocks)
+        self.initialize_stocks()
         self.generate_data()
         self.fit_arima()
         self.user_score = 0
@@ -40,11 +50,12 @@ class ForecastGame:
 
     def generate_data(self):
         if not self.unused_stocks:
-            # If all stocks have been used, reset the unused_stocks
+            print("All stocks used. Resetting unused stocks.")
             self.unused_stocks = set(self.all_stocks)
         
         self.selected_file = random.choice(list(self.unused_stocks))
         self.unused_stocks.remove(self.selected_file)
+        print(f"Selected stock: {self.selected_file}, Remaining unused: {len(self.unused_stocks)}")
         
         df = pd.read_csv(os.path.join(self.stock_data_dir, self.selected_file))
         df['Datetime'] = pd.to_datetime(df['Datetime'])
@@ -60,7 +71,6 @@ class ForecastGame:
         
         self.train_data = window['Close'][0:90].values.tolist()
         self.test_data = window['Close'][90:].values.tolist()
-
         
         self.ohlc_data = window[['Datetime', 'Open', 'High', 'Low', 'Close']].values.tolist()
         self.start_date = window['Datetime'].iloc[0].strftime('%Y-%m-%d')
@@ -70,6 +80,11 @@ class ForecastGame:
         model = auto_arima(self.train_data, seasonal=False, stepwise=True, suppress_warnings=True)
         self.arima_forecast = model.predict(n_periods=10).tolist()
 
+    @classmethod
+    def reset_stocks(cls):
+        cls.unused_stocks = set(cls.all_stocks)
+        print(f"Reset all stocks. Total available: {len(cls.unused_stocks)}")
+        
 game = ForecastGame()
 
 @app.route('/')
@@ -147,6 +162,7 @@ def play_again():
     old_scores = (game.user_score, game.arima_score)
     game = ForecastGame()
     game.user_score, game.arima_score = old_scores
+    print(f"Selected stock: {game.selected_file}, Remaining unused stocks: {len(ForecastGame.unused_stocks)}")
     return jsonify({
         'train_data': game.train_data,
         'arima_forecast': game.arima_forecast,
