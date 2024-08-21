@@ -313,6 +313,7 @@ function playAgain() {
                 chart.destroy();
             }
             initChart();
+            initCandlestickChart;
 
             // Reset candlestick chart
             Plotly.react('candlestickChart', [{

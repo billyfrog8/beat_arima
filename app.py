@@ -58,8 +58,9 @@ class ForecastGame:
         
         self.data = window['Close'].values
         
-        self.train_data = self.data[:90].tolist()
-        self.test_data = self.data[90:].tolist()
+        self.train_data = window['Close'][0:90].values.tolist()
+        self.test_data = window['Close'][90:].values.tolist()
+
         
         self.ohlc_data = window[['Datetime', 'Open', 'High', 'Low', 'Close']].values.tolist()
         self.start_date = window['Datetime'].iloc[0].strftime('%Y-%m-%d')
