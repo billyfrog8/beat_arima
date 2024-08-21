@@ -32,6 +32,11 @@ function getGameData() {
 function initChart() {
     const ctx = document.getElementById('forecastChart').getContext('2d');
     
+    // Destroy existing chart if it exists
+    if (chart) {
+        chart.destroy();
+    }
+    
     Chart.defaults.font.family = "'Poppins', sans-serif";
     Chart.defaults.font.size = 14;
 
@@ -383,9 +388,13 @@ function toggleDarkMode() {
     const isDarkMode = document.body.classList.contains('dark-mode');
     localStorage.setItem('darkMode', isDarkMode);
     
-    // Reinitialize charts to apply color changes
+    // Reinitialize charts with new color scheme
     initChart();
     initCandlestickChart();
+    
+    // Update button text
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    darkModeToggle.textContent = isDarkMode ? 'Light Mode' : 'Dark Mode';
 }
 
 document.getElementById('done').addEventListener('click', done);
