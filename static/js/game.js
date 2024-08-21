@@ -308,42 +308,12 @@ function playAgain() {
             ohlcData = data.ohlc_data;
             userForecast = Array(10).fill(null);
             
-            // Reset forecast chart
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            const textColor = isDarkMode ? 'white' : 'black';
-            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            const axisLineColor = '#cccccc'; // Light grey for both modes
+            // Completely recreate the main chart
+            if (chart) {
+                chart.destroy();
+            }
+            initChart();
 
-            // Recalculate y-axis scale
-            const range = calculateChartRange(trainData);
-
-            chart.data.datasets = [{
-                label: 'Historical Data',
-                data: trainData.concat(Array(10).fill(null)),
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false
-            }, {
-                label: 'User Forecast',
-                data: Array(100).fill(null),
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 2,
-                pointRadius: 0,
-                fill: false
-            }];
-            chart.options.scales.x.title.color = textColor;
-            chart.options.scales.x.grid.color = gridColor;
-            chart.options.scales.x.ticks.color = textColor;
-            chart.options.scales.x.borderColor = axisLineColor;
-            chart.options.scales.y.title.color = textColor;
-            chart.options.scales.y.grid.color = gridColor;
-            chart.options.scales.y.ticks.color = textColor;
-            chart.options.scales.y.borderColor = axisLineColor;
-            chart.options.scales.y.suggestedMin = range.suggestedMin;
-            chart.options.scales.y.suggestedMax = range.suggestedMax;
-            chart.update();
-            
             // Reset candlestick chart
             Plotly.react('candlestickChart', [{
                 x: Array.from({length: 90}, (_, i) => i),
