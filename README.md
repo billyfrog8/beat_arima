@@ -1,2 +1,3 @@
 # Can you beat ARIMA forecasts?
-This is a game you can play to try to beat an auto-fitted ARIMA model in forecasting 10 periods of randomly chosen real stock data.
+
+![arima](https://github.com/user-attachments/assets/ad1ae7de-cb13-4a7f-bc0e-d2c2928ee43a)
