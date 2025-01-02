@@ -10,7 +10,7 @@ tickers = sp500['Symbol'].tolist()
 end_date = datetime.now()
 start_date = end_date - timedelta(days=1*365)
 
-# Create a directory for the CSV files
+# Create a directory for the CSV filess
 if not os.path.exists('stock_data'):
     os.makedirs('stock_data')
 
